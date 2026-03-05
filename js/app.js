@@ -39,46 +39,22 @@ let currentModule = null;
 let isRouting = false;
 
 // ========== DETECCIÓN AUTOMÁTICA DE BASE PATH ==========
-// En GitHub Pages: /magic-crm-ultra/
-// En local (Live Server): /Magic-CRM-Pro-Ver-01-main/ o similar
+// Prioridad: __SPA_BASE (guardado por index.html) > <base> tag > detección por pathname
 const detectBasePath = () => {
-    // Si hay un <base> tag, usar ese
+    // 1. Fuente más confiable: guardado por el script de index.html ANTES de cualquier cambio
+    if (window.__SPA_BASE) return window.__SPA_BASE;
+
+    // 2. Si hay un <base> tag, usar ese
     const baseEl = document.querySelector('base');
     if (baseEl) return baseEl.getAttribute('href');
 
-    // Detectar automáticamente desde la URL del script
-    const scripts = document.querySelectorAll('script[src*="app.js"]');
-    if (scripts.length > 0) {
-        const src = scripts[0].getAttribute('src');
-        const currentPath = window.location.pathname;
-        // Buscar donde termina el base path (antes de js/app.js o similar)
-        const jsIndex = currentPath.indexOf('/js/');
-        if (jsIndex > 0) return currentPath.substring(0, jsIndex + 1);
-    }
-
-    // Fallback: extraer del pathname
-    // Si estamos en /magic-crm-ultra/dashboard, el base es /magic-crm-ultra/
-    // Si estamos en /Magic-CRM-Pro-Ver-01-main/index.html, el base es /Magic-CRM-Pro-Ver-01-main/
+    // 3. Fallback: extraer del pathname actual
     const path = window.location.pathname;
-    const segments = path.split('/').filter(Boolean);
-
-    // Si la URL contiene un archivo .html, el base es todo lo anterior
-    if (segments.length > 0 && segments[segments.length - 1].includes('.html')) {
-        segments.pop();
-    }
-
-    // El primer segmento es típicamente el nombre del repo/carpeta
-    if (segments.length > 0) {
-        // Verificar si el primer segmento es una ruta de la app o el base path
-        const firstSeg = '/' + segments[0];
-        if (routes[firstSeg]) {
-            // Es una ruta de la app, así que estamos en la raíz
-            return '/';
-        }
-        return '/' + segments[0] + '/';
-    }
-
-    return '/';
+    // Remover index.html
+    const cleanPath = path.replace(/index\.html$/, '');
+    // Buscar el primer segmento (nombre del repo/carpeta)
+    const match = cleanPath.match(/^(\/[^/]+\/)/);
+    return match ? match[1] : '/';
 };
 
 const BASE_PATH = detectBasePath();
