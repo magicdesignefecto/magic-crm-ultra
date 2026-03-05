@@ -1254,206 +1254,480 @@ export const DashboardModule = {
         });
     },
 
-    // Generador de Recibo PDF
+    // Generador de Recibo PDF (HTML2PDF profesional)
     generateReceipt: async (action) => {
-        // Cargar jsPDF bajo demanda
-        if (!window.jspdf) {
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                s.onload = resolve;
-                s.onerror = reject;
-                document.head.appendChild(s);
-            });
-        }
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pageWidth = 210;
-        const pageHeight = 297;
-        const margin = 15;
-        const contentWidth = pageWidth - margin * 2;
-        let yPos = margin;
-
-        // Datos del recibo
-        const currSymbol = action.leadCurrency === 'USD' ? '$us.' : 'Bs.';
-        const amount = Number(action.leadTotal || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 });
-        const dueDate = new Date(action.date + 'T00:00:00');
         const now = new Date();
         const receiptNum = `REC-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
 
-        // Período: mes anterior → mes actual
+        // Datos del recibo
+        const currSymbol = action.leadCurrency === 'USD' ? '$us.' : 'Bs.';
+        const rawAmount = Number(action.leadTotal || 0);
+        const amount = rawAmount.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Período: mes anterior → fecha cobro
+        const dueDate = new Date(action.date + 'T00:00:00');
         const prevMonth = new Date(dueDate);
         prevMonth.setMonth(prevMonth.getMonth() - 1);
-        const periodoDesde = prevMonth.toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' });
-        const periodoHasta = dueDate.toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' });
+        const fmtFull = (d) => {
+            const day = String(d.getDate()).padStart(2, '0');
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return `${day} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+        };
+        const periodoDesde = fmtFull(prevMonth);
+        const periodoHasta = fmtFull(dueDate);
+        const fechaHoy = fmtFull(now);
+        const horaHoy = now.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
 
-        // Días de retraso
-        const diffDays = Math.ceil((now - dueDate) / (1000 * 60 * 60 * 24));
-        const delay = diffDays > 0 ? diffDays : 0;
+        // Frecuencia legible
+        const freqMap = { monthly: 'Mensual', yearly: 'Anual', custom: 'Personalizado' };
+        const freqLabel = freqMap[action.recurring] || (action.recurring ? action.recurring : 'Mensual');
 
-        // ═══ HEADER ═══
-        doc.setFillColor(59, 130, 246);
-        doc.rect(0, 0, pageWidth, 40, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
-        doc.setFont(undefined, 'bold');
-        doc.text("MAGIC DESIGN EFECTO", margin, 18);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.text("Estudio de Estrategia Digital", margin, 25);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'italic');
-        doc.text('"Estrategia digital que convierte"', margin, 32);
-        const rightX = pageWidth - margin;
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'normal');
-        doc.text("magicdesignefecto.com", rightX, 14, { align: 'right' });
-        doc.text("+591 63212806", rightX, 20, { align: 'right' });
-        doc.text("contacto@magicdesignefecto.com", rightX, 26, { align: 'right' });
-        doc.text("La Paz - Bolivia", rightX, 32, { align: 'right' });
-        yPos = 50;
+        // Monto en letras (bolivianos)
+        const numberToWords = (n) => {
+            const unidades = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
+            const decenas = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+            const especiales = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+            const centenas = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
-        // ═══ TÍTULO ═══
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(22);
-        doc.setFont(undefined, 'bold');
-        doc.text("RECIBO DE COBRO", margin, yPos);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100);
-        doc.text(`Nº ${receiptNum}  |  ${now.toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, yPos + 8);
-        yPos += 22;
+            if (n === 0) return 'cero';
+            if (n === 100) return 'cien';
 
-        // ═══ CLIENTE ═══
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(margin, yPos, contentWidth, 28, 3, 3, 'F');
-        doc.setTextColor(100);
-        doc.setFontSize(8);
-        doc.text("CLIENTE", margin + 5, yPos + 6);
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
-        doc.text(action.leadName, margin + 5, yPos + 15);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100);
-        const clientDetail = [action.leadCompany, action.leadPhone, action.leadEmail].filter(Boolean).join(' · ');
-        if (clientDetail) doc.text(clientDetail, margin + 5, yPos + 22);
-        yPos += 36;
+            let result = '';
+            const miles = Math.floor(n / 1000);
+            const resto = n % 1000;
 
-        // ═══ CONCEPTO ═══
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text("CONCEPTO", margin, yPos);
-        yPos += 6;
-        doc.setDrawColor(200);
-        doc.line(margin, yPos, margin + contentWidth, yPos);
-        yPos += 6;
-
-        // Servicio + concepto
-        const serviceText = action.billingService || action.actionText;
-        const conceptText = action.billingConcept || '';
-        const boxH = conceptText ? 28 : 22;
-        doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(226, 232, 240);
-        doc.roundedRect(margin, yPos, contentWidth, boxH, 2, 2, 'FD');
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text(serviceText, margin + 5, yPos + 8);
-        if (conceptText) {
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(100);
-            doc.text(conceptText, margin + 5, yPos + 16);
-        }
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100);
-        doc.text(`Período: ${periodoDesde} → ${periodoHasta}`, margin + 5, yPos + (conceptText ? 24 : 16));
-        yPos += boxH + 8;
-
-        // ═══ ADELANTO (si existe) ═══
-        if (action.billingAdvance && action.billingAdvance > 0) {
-            doc.setFillColor(255, 251, 235);
-            doc.setDrawColor(245, 158, 11);
-            doc.roundedRect(margin, yPos, contentWidth, 22, 3, 3, 'FD');
-            doc.setTextColor(146, 64, 14);
-            doc.setFontSize(8);
-            doc.text("💳 ADELANTO", margin + 5, yPos + 6);
-            doc.setFontSize(11);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${currSymbol} ${Number(action.billingAdvance).toLocaleString('es-BO', { minimumFractionDigits: 2 })}`, margin + 5, yPos + 16);
-            if (action.billingAdvanceConcept) {
-                doc.setFontSize(8);
-                doc.setFont(undefined, 'normal');
-                doc.text(action.billingAdvanceConcept, margin + contentWidth - 5, yPos + 16, { align: 'right' });
+            if (miles > 0) {
+                if (miles === 1) result += 'mil';
+                else {
+                    const centenasMil = Math.floor(miles / 100);
+                    const restoMil = miles % 100;
+                    if (centenasMil > 0) result += (centenasMil === 1 && restoMil === 0 && miles === 100) ? 'cien' : centenas[centenasMil];
+                    if (restoMil > 0) {
+                        if (centenasMil > 0) result += ' ';
+                        if (restoMil < 10) result += unidades[restoMil];
+                        else if (restoMil < 20) result += especiales[restoMil - 10];
+                        else {
+                            result += decenas[Math.floor(restoMil / 10)];
+                            if (restoMil % 10 > 0) result += ' y ' + unidades[restoMil % 10];
+                        }
+                    }
+                    result += ' mil';
+                }
+                if (resto > 0) result += ' ';
             }
-            yPos += 30;
+
+            if (resto > 0 || miles === 0) {
+                const c = Math.floor(resto / 100);
+                const d = resto % 100;
+                if (c > 0) result += (c === 1 && d === 0) ? 'cien' : centenas[c];
+                if (d > 0) {
+                    if (c > 0) result += ' ';
+                    if (d < 10) result += unidades[d];
+                    else if (d < 20) result += especiales[d - 10];
+                    else {
+                        result += decenas[Math.floor(d / 10)];
+                        if (d % 10 > 0) result += ' y ' + unidades[d % 10];
+                    }
+                }
+            }
+
+            return result.charAt(0).toUpperCase() + result.slice(1);
+        };
+
+        const intPart = Math.floor(rawAmount);
+        const decPart = Math.round((rawAmount - intPart) * 100);
+        const currWord = action.leadCurrency === 'USD' ? 'Dólares Americanos' : 'Bolivianos';
+        const amountWords = `(${numberToWords(intPart)} ${String(decPart).padStart(2, '0')}/100 ${currWord})`;
+
+        const serviceText = action.billingService || action.actionText || 'Servicio contratado';
+        const conceptText = action.billingConcept || '';
+
+        const logoUrl = 'https://raw.githubusercontent.com/magicdesignefecto/Magic-Design-Efecto-Servicios-Gestion-de-Redes-Sociales/77cbcdf9e5992cc519ac102d1182d9397f23f12a/logo%20svg%20magic%20design%20efecto.svg';
+
+        const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo - ${action.leadName}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 480px; overflow-x: hidden; }
+        body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; color: #1E293B; background: white; -webkit-text-size-adjust: 100%; }
+
+        .page { width: 100%; max-width: 480px; margin: 0 auto; background: white; overflow: hidden; }
+
+        /* ═══ HEADER ═══ */
+        .receipt-header {
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #2563EB 100%);
+            color: white;
+            padding: 28px 28px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo {
+            width: 44px; height: 44px;
+            background: white;
+            border-radius: 10px;
+            padding: 6px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .header-brand { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; text-transform: uppercase; }
+        .header-sub { font-size: 0.72rem; font-weight: 400; color: rgba(255,255,255,0.65); margin-top: 3px; line-height: 1.3; }
+        .header-slogan { font-size: 0.68rem; font-style: italic; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+        /* ═══ TÍTULO RECIBO ═══ */
+        .receipt-title-bar {
+            background: #F8FAFC;
+            border-bottom: 2px solid #E2E8F0;
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .receipt-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #64748B;
+            font-weight: 700;
+        }
+        .receipt-title span {
+            display: block;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+            color: #0F172A;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+        .receipt-number {
+            text-align: right;
+            font-size: 0.72rem;
+            color: #94A3B8;
+            font-weight: 500;
+        }
+        .receipt-number strong {
+            display: block;
+            font-size: 0.8rem;
+            color: #475569;
+            font-weight: 700;
+            margin-bottom: 2px;
         }
 
-        // ═══ MONTO ═══
-        doc.setFillColor(240, 253, 244);
-        doc.roundedRect(margin, yPos, contentWidth, 30, 3, 3, 'F');
-        doc.setTextColor(100);
-        doc.setFontSize(8);
-        doc.text("MONTO COBRADO", margin + 5, yPos + 7);
-        doc.setTextColor(21, 128, 61);
-        doc.setFontSize(22);
-        doc.setFont(undefined, 'bold');
-        doc.text(`${currSymbol} ${amount}`, margin + 5, yPos + 22);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(100);
-        doc.text(action.leadCurrency === 'USD' ? 'Dólares Americanos' : 'Bolivianos', margin + contentWidth - 5, yPos + 22, { align: 'right' });
-        yPos += 38;
+        /* ═══ CONTENT ═══ */
+        .content { padding: 24px 28px 20px; }
 
-        // ═══ FECHA DE COBRO + RETRASO ═══
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(margin, yPos, contentWidth, 24, 3, 3, 'F');
-        doc.setTextColor(100);
-        doc.setFontSize(8);
-        doc.text("FECHA DE COBRO", margin + 5, yPos + 6);
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text(now.toLocaleDateString('es-BO', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }), margin + 5, yPos + 15);
-        if (delay > 0) {
-            doc.setTextColor(220, 38, 38);
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${delay} día${delay > 1 ? 's' : ''} de retraso`, margin + contentWidth - 5, yPos + 15, { align: 'right' });
+        /* ═══ SECTION LABEL ═══ */
+        .section-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #94A3B8;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
-        yPos += 32;
 
-        // ═══ ESTADO ═══
-        doc.setFillColor(21, 128, 61);
-        doc.roundedRect(margin, yPos, contentWidth, 14, 3, 3, 'F');
-        doc.setTextColor(255);
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text("✓ COBRO PROCESADO", pageWidth / 2, yPos + 9.5, { align: 'center' });
-        yPos += 24;
+        /* ═══ CLIENTE ═══ */
+        .client-section {
+            margin-bottom: 28px;
+            padding-bottom: 22px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .client-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0F172A;
+            letter-spacing: -0.3px;
+            margin-bottom: 3px;
+        }
+        .client-company {
+            font-size: 0.88rem;
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        .client-phone {
+            font-size: 0.82rem;
+            color: #64748B;
+        }
 
-        // ═══ FIRMA ═══
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.text("Diego Gonzales", margin, yPos);
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'normal');
-        doc.text("CEO – Magic Design Efecto", margin, yPos + 5);
+        /* ═══ CONCEPTO ═══ */
+        .concept-section {
+            margin-bottom: 28px;
+            padding-bottom: 22px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .concept-service {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0F172A;
+            margin-bottom: 6px;
+        }
+        .concept-platforms {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 14px;
+        }
+        .concept-period-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #94A3B8;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .concept-period {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1E293B;
+            line-height: 1.5;
+        }
+        .concept-freq {
+            display: inline-block;
+            margin-top: 6px;
+            background: #EFF6FF;
+            color: #2563EB;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
 
-        // Footer
-        doc.setFillColor(248, 250, 252);
-        doc.rect(0, pageHeight - 14, pageWidth, 14, 'F');
-        doc.setTextColor(150);
-        doc.setFontSize(7);
-        doc.text(`Magic Design Efecto © ${now.getFullYear()} | magicdesignefecto.com | La Paz, Bolivia`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-        doc.text(`Generado: ${now.toLocaleDateString('es-BO')} ${now.toLocaleTimeString('es-BO')}`, pageWidth / 2, pageHeight - 4, { align: 'center' });
+        /* ═══ MONTO ═══ */
+        .amount-section {
+            background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+            border: 1px solid #BBF7D0;
+            border-radius: 12px;
+            padding: 22px 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .amount-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #059669;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+        }
+        .amount-words {
+            font-size: 0.78rem;
+            color: #64748B;
+            font-weight: 500;
+            font-style: italic;
+        }
 
-        doc.save(`Recibo_${action.leadName.replace(/\s+/g, '_')}_${receiptNum}.pdf`);
+        /* ═══ FECHA DE PAGO ═══ */
+        .payment-date-section {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+        }
+        .payment-date-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0F172A;
+            margin-top: 4px;
+        }
+        .payment-date-time {
+            font-size: 0.78rem;
+            color: #94A3B8;
+            margin-top: 2px;
+        }
+
+        /* ═══ FIRMA ═══ */
+        .signature-section {
+            padding-top: 20px;
+            border-top: 1px solid #E2E8F0;
+            margin-bottom: 0;
+        }
+        .signature-line {
+            width: 200px;
+            border-bottom: 1px solid #CBD5E1;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+        }
+        .signature-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0F172A;
+        }
+        .signature-role {
+            font-size: 0.78rem;
+            color: #64748B;
+            margin-top: 2px;
+        }
+        .signature-company {
+            font-size: 0.78rem;
+            color: #94A3B8;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        /* ═══ FOOTER ═══ */
+        .receipt-footer {
+            margin-top: 24px;
+            padding: 16px 28px 60px;
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%);
+            text-align: center;
+        }
+        .footer-text {
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+        }
+        .footer-text strong {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* ═══ DOWNLOAD BUTTON ═══ */
+        .btn-download {
+            display: block;
+            width: calc(100% - 48px);
+            margin: 20px auto;
+            padding: 14px;
+            background: linear-gradient(135deg, #0F172A, #2563EB);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-download:active { opacity: 0.8; }
+        .btn-download:disabled { opacity: 0.6; cursor: wait; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- HEADER -->
+        <div class="receipt-header">
+            <div class="header-left">
+                <div class="header-logo"><img src="${logoUrl}" alt="Logo"></div>
+                <div>
+                    <div class="header-brand">Magic Design Efecto</div>
+                    <div class="header-sub">Estudio de Estrategia y Marketing Digital</div>
+                    <div class="header-slogan">Estrategias digitales que convierten</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TÍTULO -->
+        <div class="receipt-title-bar">
+            <div class="receipt-title">
+                Documento
+                <span>RECIBO DE PAGO</span>
+            </div>
+            <div class="receipt-number">
+                <strong>Nº ${receiptNum}</strong>
+                ${fechaHoy}
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- CLIENTE -->
+            <div class="client-section">
+                <div class="section-label">Cliente</div>
+                <div class="client-name">${action.leadName}</div>
+                ${action.leadCompany ? `<div class="client-company">${action.leadCompany}</div>` : ''}
+                ${action.leadPhone ? `<div class="client-phone">Tel: ${action.leadPhone}</div>` : ''}
+            </div>
+
+            <!-- CONCEPTO -->
+            <div class="concept-section">
+                <div class="section-label">Concepto</div>
+                <div class="concept-service">${serviceText}</div>
+                ${conceptText ? `<div class="concept-platforms">Plataformas: ${conceptText}</div>` : ''}
+
+                <div class="concept-period-label">Período de servicio</div>
+                <div class="concept-period">
+                    ${periodoDesde}<br>al ${periodoHasta}
+                </div>
+                <span class="concept-freq">${freqLabel}</span>
+            </div>
+
+            <!-- MONTO -->
+            <div class="amount-section">
+                <div class="section-label" style="text-align:center; margin-bottom:10px;">Monto Pagado</div>
+                <div class="amount-value">${currSymbol} ${amount}</div>
+                <div class="amount-words">${amountWords}</div>
+            </div>
+
+            <!-- FECHA DE PAGO -->
+            <div class="payment-date-section">
+                <div class="section-label">Fecha de Pago</div>
+                <div class="payment-date-value">${fechaHoy}</div>
+                <div class="payment-date-time">Hora: ${horaHoy}</div>
+            </div>
+
+            <!-- FIRMA -->
+            <div class="signature-section">
+                <div class="section-label">Cobro Procesado Por</div>
+                <div class="signature-line"></div>
+                <div class="signature-name">Diego Gonzales</div>
+                <div class="signature-role">Gestor Marketing Digital</div>
+                <div class="signature-company">Magic Design Efecto</div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="receipt-footer">
+            <div class="footer-text">
+                <strong>Magic Design Efecto</strong> · Estudio de Estrategia y Marketing Digital<br>
+                magicdesignefecto.com · +591 63212806 · La Paz, Bolivia<br>
+                Generado automáticamente el ${fechaHoy} a las ${horaHoy}
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-download" id="btnDownload">📥 Descargar Recibo PDF</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+    <script>
+        function generatePDF() {
+            const btn = document.getElementById('btnDownload');
+            const el = document.querySelector('.page');
+            btn.textContent = '⏳ Generando PDF...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const pxToMm = 0.2646;
+                const pdfWidth = 480 * pxToMm;
+                const pdfHeight = (el.scrollHeight + 40) * pxToMm;
+
+                html2pdf().set({
+                    margin: 0,
+                    filename: 'Recibo_${action.leadName.replace(/[^a-zA-Z0-9 ]/g, '_').replace(/\s+/g, '_')}_${receiptNum}.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, width: 480, windowWidth: 480, x: 0 },
+                    jsPDF: { unit: 'mm', format: [pdfWidth, pdfHeight], orientation: 'portrait' },
+                    pagebreak: { mode: ['avoid-all'] }
+                }).from(el).save().then(() => {
+                    btn.textContent = '✅ PDF descargado';
+                    setTimeout(() => { btn.textContent = '📥 Descargar Recibo PDF'; btn.disabled = false; }, 2500);
+                }).catch(() => {
+                    btn.textContent = '❌ Error, intenta de nuevo';
+                    setTimeout(() => { btn.textContent = '📥 Descargar Recibo PDF'; btn.disabled = false; }, 2000);
+                });
+            }, 500);
+        }
+
+        document.getElementById('btnDownload').addEventListener('click', generatePDF);
+    <\/script>
+</body>
+</html>`;
+
+        const w = window.open('', '_blank');
+        w.document.write(html);
+        w.document.close();
     },
 
     // Bind de navegación de mes y filtros (llamar después del render principal)
