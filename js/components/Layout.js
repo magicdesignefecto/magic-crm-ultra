@@ -224,13 +224,7 @@ export const Layout = {
             CacheManager.clearAll();
 
             // Recargar la página actual
-            // Recargar la página actual
-            if (window.navigateTo) {
-                const currentPath = window.location.pathname;
-                window.navigateTo(currentPath);
-            } else {
-                window.location.reload();
-            }
+            window.location.reload();
         });
     },
 
