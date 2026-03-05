@@ -1,0 +1,1015 @@
+:root {
+    /* --- 1. Paleta de Colores (Magic Design: Azul y Blanco) --- */
+    --primary: #0056D2;
+    --primary-dark: #0044A6;
+    --primary-light: #E8F0FE;
+
+    /* Escala de Grises y Textos */
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --text-light: #FFFFFF;
+
+    /* Fondos */
+    --bg-body: #F3F4F6;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-input: #FAFAFA;
+    --border-color: #E5E7EB;
+    --border-light: #E5E7EB;
+
+    /* Sombras */
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+    /* Botones 3D */
+    --btn-shadow: 0 4px 0 var(--primary-dark);
+    --btn-shadow-hover: 0 6px 0 var(--primary-dark);
+    --btn-shadow-active: 0 0 0 var(--primary-dark);
+    --btn-transform-hover: translateY(-2px);
+    --btn-transform-active: translateY(4px);
+
+    /* Espaciado */
+    --radius-md: 10px;
+    --header-height: 70px;
+    --sidebar-width: 260px;
+    --font-main: 'Inter', sans-serif;
+}
+
+/* =============================================================
+   TEMA OSCURO COMPLETO - Magic Design CRM
+   Fondo: Negro/Carbón | Texto: Blanco | Acentos: Azul
+   ============================================================= */
+
+body.theme-dark {
+    /* === VARIABLES BASE DARK === */
+    --bg-body: #0F172A;
+    --bg-card: #1E293B;
+    --bg-sidebar: #1E293B;
+    --bg-input: #0F172A;
+    --text-main: #F1F5F9;
+    --text-muted: #94A3B8;
+    --border-color: #334155;
+    --border-light: #334155;
+    --primary-light: #1E3A5F;
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* === BODY Y CONTENEDOR PRINCIPAL === */
+body.theme-dark {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .app-layout,
+body.theme-dark .main-wrapper,
+body.theme-dark .content-scroll-area,
+body.theme-dark .content-container,
+body.theme-dark .main-content {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+}
+
+/* === SIDEBAR === */
+body.theme-dark .sidebar {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .logo-text {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .logo-circle {
+    background-color: transparent !important;
+    border-radius: 50%;
+    overflow: hidden;
+    display: inline-flex;
+}
+
+body.theme-dark .logo-circle img {
+    border-radius: 50%;
+    background-color: transparent !important;
+}
+
+body.theme-dark .nav-item {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .nav-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .nav-item.active {
+    background: rgba(37, 99, 235, 0.25) !important;
+    color: #60A5FA !important;
+}
+
+/* === HEADER / TOP BAR === */
+body.theme-dark .top-bar,
+body.theme-dark .header {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .page-title,
+body.theme-dark .header-title {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .u-name {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .u-role {
+    color: #60A5FA !important;
+}
+
+body.theme-dark .user-capsule {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* === TODOS LOS ENCABEZADOS === */
+body.theme-dark h1,
+body.theme-dark h2,
+body.theme-dark h3,
+body.theme-dark h4,
+body.theme-dark h5,
+body.theme-dark h6,
+body.theme-dark strong,
+body.theme-dark b,
+body.theme-dark label {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark p,
+body.theme-dark span,
+body.theme-dark div {
+    color: inherit;
+}
+
+/* === CARDS Y CONTENEDORES === */
+body.theme-dark .settings-card,
+body.theme-dark .stat-card,
+body.theme-dark .user-card,
+body.theme-dark .card,
+body.theme-dark [class*="card"] {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* === FORM SECTIONS (fondos de formularios) === */
+body.theme-dark .form-section {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .form-section h4,
+body.theme-dark .section-title {
+    color: var(--text-main) !important;
+}
+
+/* === INPUTS, SELECTS, TEXTAREAS === */
+body.theme-dark input,
+body.theme-dark select,
+body.theme-dark textarea,
+body.theme-dark .form-input,
+body.theme-dark .form-select,
+body.theme-dark .profile-input,
+body.theme-dark .auth-input,
+body.theme-dark .search-input {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder,
+body.theme-dark .form-input::placeholder,
+body.theme-dark .search-input::placeholder {
+    color: #64748B !important;
+}
+
+body.theme-dark input:focus,
+body.theme-dark select:focus,
+body.theme-dark textarea:focus {
+    border-color: var(--primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* === DROPDOWNS === */
+body.theme-dark .dropdown-trigger {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .dropdown-content {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .service-option {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .service-option:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* === MODALES === */
+body.theme-dark .modal-content {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .modal-header {
+    background-color: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .modal-header h3 {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .modal-body {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .btn-close-modal {
+    color: var(--text-muted) !important;
+}
+
+/* === SERVICIOS (Configuración) === */
+body.theme-dark .service-item {
+    background-color: var(--bg-body) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .service-info strong {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .service-price {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #10B981 !important;
+}
+
+body.theme-dark .add-service-form input {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* === DASHBOARD STATS === */
+body.theme-dark .stat-box,
+body.theme-dark [style*="border-radius"][style*="padding"] {
+    background-color: var(--bg-card) !important;
+}
+
+/* === TABLAS === */
+body.theme-dark table {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark th {
+    background-color: var(--bg-body) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark td {
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark tr:hover td {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* === BADGES === */
+body.theme-dark .badge-role {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+    color: #818CF8 !important;
+}
+
+/* === ESTADOS VACÍOS === */
+body.theme-dark .empty-state,
+body.theme-dark .empty-state-mini {
+    color: var(--text-muted) !important;
+}
+
+/* === BOTÓN TEMA EN SETTINGS === */
+body.theme-dark .theme-btn {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .theme-btn.active {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    border-color: var(--primary) !important;
+    color: #60A5FA !important;
+}
+
+/* === PERFIL AVATAR === */
+body.theme-dark .profile-avatar-container .btn-upload {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-color: var(--primary) !important;
+    color: #60A5FA !important;
+}
+
+/* === COTIZACIÓN / TOTAL BOX === */
+body.theme-dark .total-box {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: #10B981 !important;
+}
+
+body.theme-dark .total-amount {
+    color: #10B981 !important;
+}
+
+/* === ALERTAS SWAL (SweetAlert2) === */
+body.theme-dark .swal2-popup {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .swal2-title {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .swal2-html-container {
+    color: var(--text-muted) !important;
+}
+
+/* === TEXTOS INLINE HARDCODED === */
+body.theme-dark [style*="color:#1E293B"],
+body.theme-dark [style*="color: #1E293B"],
+body.theme-dark [style*="color:#0F172A"],
+body.theme-dark [style*="color: #0F172A"],
+body.theme-dark [style*="color:#111827"],
+body.theme-dark [style*="color: #111827"] {
+    color: var(--text-main) !important;
+}
+
+/* === FONDOS BLANCOS HARDCODED === */
+body.theme-dark [style*="background: white"],
+body.theme-dark [style*="background:white"],
+body.theme-dark [style*="background-color: white"],
+body.theme-dark [style*="background-color:white"],
+body.theme-dark [style*="background: #fff"],
+body.theme-dark [style*="background:#fff"],
+body.theme-dark [style*="background-color: #fff"],
+body.theme-dark [style*="background-color:#fff"],
+body.theme-dark [style*="background: #FFFFFF"],
+body.theme-dark [style*="background:#FFFFFF"],
+body.theme-dark [style*="background-color: #FFFFFF"],
+body.theme-dark [style*="background-color:#FFFFFF"] {
+    background-color: var(--bg-card) !important;
+}
+
+/* === LINKS === */
+body.theme-dark a {
+    color: #60A5FA;
+}
+
+body.theme-dark a:hover {
+    color: #93C5FD;
+}
+
+/* === SCROLLBARS === */
+body.theme-dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.theme-dark ::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748B;
+}
+
+/* =============================================================
+   CALENDARIO - DARK MODE
+   ============================================================= */
+body.theme-dark .cal-top-bar {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .calendar-wrapper {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .days-header {
+    background-color: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .day-name {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .calendar-grid {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .cal-cell {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .cal-cell:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.theme-dark .cell-number {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .cal-select,
+body.theme-dark .cal-year-input {
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .nav-btn {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .nav-btn:hover {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-color: var(--primary) !important;
+    color: #60A5FA !important;
+}
+
+body.theme-dark .task-pill {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #60A5FA !important;
+    border-left-color: #3B82F6 !important;
+}
+
+body.theme-dark .delivery-pill {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #10B981 !important;
+    border-left-color: #10B981 !important;
+}
+
+/* =============================================================
+   COTIZACIONES - DARK MODE (Botón Ver PDF y otros)
+   ============================================================= */
+body.theme-dark #btnPreviewPDF,
+body.theme-dark [id*="preview"],
+body.theme-dark button[style*="background:white"],
+body.theme-dark button[style*="background: white"] {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .total-label,
+body.theme-dark [class*="total"] span:first-child {
+    color: var(--text-main) !important;
+}
+
+/* =============================================================
+   DASHBOARD ESPECÍFICO - DARK MODE
+   ============================================================= */
+body.theme-dark .page-header h2,
+body.theme-dark .page-header p {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark [style*="color: var(--text-main)"] {
+    color: var(--text-main) !important;
+}
+
+/* Stat cards del dashboard */
+body.theme-dark [style*="background: white"],
+body.theme-dark [style*="background:white"] {
+    background-color: var(--bg-card) !important;
+}
+
+body.theme-dark [style*="#F8FAFC"],
+body.theme-dark [style*="#F9FAFB"],
+body.theme-dark [style*="#F3F4F6"] {
+    background-color: var(--bg-body) !important;
+}
+
+/* =============================================================
+   MODAL DAY DETAILS (Calendario) - DARK MODE
+   ============================================================= */
+body.theme-dark #dayDetailsContent,
+body.theme-dark #dayDetailsContent h3,
+body.theme-dark #dayDetailsContent h4 {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark #dayDetailsContent>div {
+    background-color: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark #dayDetailsContent [style*="background:#F8FAFC"],
+body.theme-dark #dayDetailsContent [style*="background: #F8FAFC"] {
+    background-color: var(--bg-body) !important;
+}
+
+body.theme-dark #dayDetailsContent [style*="color:#1E293B"],
+body.theme-dark #dayDetailsContent [style*="color: #1E293B"] {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark #dayDetailsContent [style*="color:#64748B"],
+body.theme-dark #dayDetailsContent [style*="color: #64748B"] {
+    color: var(--text-muted) !important;
+}
+
+/* =============================================================
+   REPORTES Y METAS - DARK MODE
+   ============================================================= */
+body.theme-dark .report-card,
+body.theme-dark .goal-card,
+body.theme-dark [class*="report"],
+body.theme-dark [class*="goal"] {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* =============================================================
+   PIPELINE - DARK MODE
+   ============================================================= */
+body.theme-dark .pipeline-column,
+body.theme-dark .kanban-column {
+    background-color: var(--bg-body) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .pipeline-card,
+body.theme-dark .kanban-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* =============================================================
+   CLIENTES - DARK MODE  
+   ============================================================= */
+body.theme-dark .client-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .client-card h4,
+body.theme-dark .client-card strong {
+    color: var(--text-main) !important;
+}
+
+/* =============================================================
+   PROYECTOS - DARK MODE  
+   ============================================================= */
+body.theme-dark .project-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .project-card h4,
+body.theme-dark .project-card strong {
+    color: var(--text-main) !important;
+}
+
+/* =============================================================
+   DASHBOARD KPI CARDS - DARK MODE  
+   ============================================================= */
+body.theme-dark .kpi-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .kpi-title {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .kpi-value {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .kpi-trend {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .dash-section {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .section-title {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .activity-item {
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .act-icon {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: #60A5FA !important;
+}
+
+body.theme-dark .act-title {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .act-meta {
+    color: var(--text-muted) !important;
+}
+
+/* =============================================================
+   FIXES GLOBALES - FORMULARIOS INLINE STYLES
+   ============================================================= */
+body.theme-dark [style*="background:#F9FAFB"],
+body.theme-dark [style*="background: #F9FAFB"],
+body.theme-dark [style*="background:#F8FAFC"],
+body.theme-dark [style*="background: #F8FAFC"] {
+    background-color: var(--bg-body) !important;
+}
+
+body.theme-dark [style*="color:#1E293B"],
+body.theme-dark [style*="color: #1E293B"],
+body.theme-dark [style*="color:#334155"],
+body.theme-dark [style*="color: #334155"],
+body.theme-dark [style*="color:#475569"],
+body.theme-dark [style*="color: #475569"] {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark [style*="color:#94A3B8"],
+body.theme-dark [style*="color: #94A3B8"],
+body.theme-dark [style*="color:#64748B"],
+body.theme-dark [style*="color: #64748B"],
+body.theme-dark [style*="color:#9CA3AF"],
+body.theme-dark [style*="color: #9CA3AF"] {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark [style*="border-color:#E2E8F0"],
+body.theme-dark [style*="border: 1px solid #E2E8F0"],
+body.theme-dark [style*="border:1px solid #E2E8F0"],
+body.theme-dark [style*="border: 1px solid #F1F5F9"] {
+    border-color: var(--border-color) !important;
+}
+
+/* PDF Button específico */
+body.theme-dark #btnPreviewPDF {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* =============================================================
+   LOGIN - SIEMPRE EN MODO CLARO (NUNCA CAMBIA)
+   El login debe verse claro sin importar el tema activo
+   ============================================================= */
+
+/* Contenedor principal */
+body.theme-dark .login-container {
+    background-color: #F8FAFC !important;
+}
+
+/* Card principal del login */
+body.theme-dark .auth-card {
+    background-color: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+}
+
+/* Tabs de Ingresar / Solicitar Acceso */
+body.theme-dark .auth-tabs {
+    background-color: #F1F5F9 !important;
+    border-color: #E2E8F0 !important;
+}
+
+body.theme-dark .tab-btn {
+    background-color: transparent !important;
+    color: #64748B !important;
+}
+
+body.theme-dark .tab-btn.active {
+    background-color: #FFFFFF !important;
+    color: #2563EB !important;
+    border-bottom-color: #2563EB !important;
+}
+
+/* Contenido interno */
+body.theme-dark .auth-content {
+    background-color: #FFFFFF !important;
+}
+
+body.theme-dark .auth-content h2 {
+    color: #1E293B !important;
+}
+
+/* Logo circle */
+body.theme-dark .logo-circle {
+    background-color: #FFFFFF !important;
+    border-color: #F1F5F9 !important;
+}
+
+/* Inputs del login */
+body.theme-dark .auth-input {
+    background-color: #FFFFFF !important;
+    border-color: #CBD5E1 !important;
+    color: #1E293B !important;
+}
+
+body.theme-dark .auth-input::placeholder {
+    color: #94A3B8 !important;
+}
+
+body.theme-dark .auth-input:focus {
+    border-color: #2563EB !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Labels */
+body.theme-dark .input-label {
+    color: #475569 !important;
+}
+
+body.theme-dark .input-group label {
+    color: #475569 !important;
+}
+
+/* Botón de mostrar contraseña */
+body.theme-dark .toggle-pass {
+    color: #64748B !important;
+}
+
+/* Botón principal */
+body.theme-dark .btn-auth {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+}
+
+body.theme-dark .btn-auth:hover {
+    background-color: #1D4ED8 !important;
+}
+
+/* Link de olvidé contraseña */
+body.theme-dark .forgot-link {
+    color: #2563EB !important;
+}
+
+/* Forms dentro del login */
+body.theme-dark #loginForm,
+body.theme-dark #registerForm {
+    background-color: #FFFFFF !important;
+}
+
+body.theme-dark #loginForm *,
+body.theme-dark #registerForm * {
+    color: inherit;
+}
+
+/* =============================================================
+   SWEETALERT2 EN LOGIN - SIEMPRE MODO CLARO
+   Los popups de alerta deben verse claros en la página de login
+   ============================================================= */
+
+/* Cuando hay un login-container presente, forzar SweetAlert a claro */
+body:has(.login-container) .swal2-popup,
+body:has(.auth-card) .swal2-popup {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+}
+
+body:has(.login-container) .swal2-title,
+body:has(.auth-card) .swal2-title {
+    color: #1E293B !important;
+}
+
+body:has(.login-container) .swal2-html-container,
+body:has(.auth-card) .swal2-html-container {
+    color: #475569 !important;
+}
+
+body:has(.login-container) .swal2-input,
+body:has(.auth-card) .swal2-input {
+    background-color: #FFFFFF !important;
+    border-color: #CBD5E1 !important;
+    color: #1E293B !important;
+}
+
+body:has(.login-container) .swal2-input::placeholder,
+body:has(.auth-card) .swal2-input::placeholder {
+    color: #94A3B8 !important;
+}
+
+/* Botones en SweetAlert en login */
+body:has(.login-container) .swal2-confirm,
+body:has(.auth-card) .swal2-confirm {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+}
+
+body:has(.login-container) .swal2-cancel,
+body:has(.auth-card) .swal2-cancel {
+    background-color: #64748B !important;
+    color: #FFFFFF !important;
+}
+
+body:has(.login-container) .swal2-deny,
+body:has(.auth-card) .swal2-deny {
+    background-color: #6B7280 !important;
+    color: #FFFFFF !important;
+}
+
+/* =============================================================
+   REPORTES FINANCIEROS - DARK MODE
+   ============================================================= */
+body.theme-dark .summary-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .summary-card small {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .summary-val {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .chart-container {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .chart-container h4 {
+    color: var(--text-main) !important;
+}
+
+/* Barras de progreso en reportes */
+body.theme-dark [style*="background:#F1F5F9"] {
+    background-color: #334155 !important;
+}
+
+/* =============================================================
+   SETTINGS - SERVICIOS ICONOS EDITAR/BORRAR
+   ============================================================= */
+/* Asegurar que los iconos sean visibles en ambos temas */
+.btn-edit-service,
+.btn-delete-service {
+    font-size: 1rem;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-service:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.btn-delete-service:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Dark mode - iconos con colores más brillantes */
+body.theme-dark .btn-edit-service {
+    color: #60A5FA !important;
+}
+
+body.theme-dark .btn-edit-service:hover {
+    background-color: rgba(96, 165, 250, 0.2) !important;
+}
+
+body.theme-dark .btn-delete-service {
+    color: #F87171 !important;
+}
+
+body.theme-dark .btn-delete-service:hover {
+    background-color: rgba(248, 113, 113, 0.2) !important;
+}
+
+/* Service item en dark mode */
+body.theme-dark .service-item {
+    background-color: var(--bg-body) !important;
+}
+
+body.theme-dark .service-item strong {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .service-price {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34D399 !important;
+}
+
+/* Goals/Metas dark mode - NEW DESIGN */
+body.theme-dark .goals-page {
+    background-color: transparent !important;
+}
+
+body.theme-dark .goals-grid {
+    background-color: transparent !important;
+}
+
+body.theme-dark .goal-card {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .goal-card-header .goal-info h3 {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .goal-actions button {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .goal-actions .btn-edit:hover {
+    color: #60A5FA !important;
+    background-color: rgba(96, 165, 250, 0.15) !important;
+}
+
+body.theme-dark .goal-actions .btn-delete:hover {
+    color: #F87171 !important;
+    background-color: rgba(248, 113, 113, 0.15) !important;
+}
+
+body.theme-dark .progress-ring .ring-bg {
+    stroke: #334155 !important;
+}
+
+body.theme-dark .progress-percent {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .progress-label {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .stat-row {
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .stat-label {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .stat-value {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .goal-dates {
+    border-color: var(--border-color) !important;
+}
+
+body.theme-dark .date-label {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .date-value {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .date-item i {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .goals-header h2 {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .goals-header p {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .goals-empty {
+    color: var(--text-muted) !important;
+}
+
+body.theme-dark .goals-empty h3 {
+    color: var(--text-main) !important;
+}
+
+body.theme-dark .btn-new-goal {
+    background-color: var(--primary) !important;
+    color: white !important;
+}

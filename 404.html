@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="CRM profesional para gestión de clientes, proyectos, cotizaciones y leads. Magic Design Efecto.">
+    <title>Magic Design CRM</title>
+    <link rel="icon" type="image/png" href="Favicon logo magic design efecto.png">
+
+    <!-- Open Graph / WhatsApp / Social Sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Magic Design CRM">
+    <meta property="og:description"
+        content="CRM profesional para gestión de clientes, proyectos, cotizaciones y leads.">
+    <meta property="og:image" content="Open Graph  logo magic design efecto.png">
+    <meta property="og:site_name" content="Magic Design Efecto">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Magic Design CRM">
+    <meta name="twitter:description"
+        content="CRM profesional para gestión de clientes, proyectos, cotizaciones y leads.">
+    <meta name="twitter:image" content="Open Graph  logo magic design efecto.png">
+
+    <!-- SPA Redirect Script for GitHub Pages -->
+    <script>
+        // Single Page App redirect for GitHub Pages
+        // Converts the path to a query parameter and redirects to index.html
+        // so the SPA router can handle it properly
+        (function () {
+            var pathSegmentsToKeep = 1; // Keep the repo name segment (/magic-crm-ultra/)
+            var loc = window.location;
+            var fullPath = loc.pathname;
+
+            // Extract the path after the base (repo name)
+            var segments = fullPath.split('/');
+            // segments[0] = "", segments[1] = "magic-crm-ultra", segments[2+] = route
+            var basePath = '/' + segments.slice(1, 1 + pathSegmentsToKeep).join('/') + '/';
+            var routePath = '/' + segments.slice(1 + pathSegmentsToKeep).join('/');
+
+            // Only redirect if there's an actual route (not just the base)
+            if (routePath && routePath !== '/') {
+                loc.replace(
+                    loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '') +
+                    basePath + '?p=' + encodeURIComponent(routePath) +
+                    (loc.search ? '&q=' + encodeURIComponent(loc.search.slice(1)) : '') +
+                    loc.hash
+                );
+            }
+        })();
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>

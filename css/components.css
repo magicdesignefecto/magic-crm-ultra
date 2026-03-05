@@ -1,0 +1,172 @@
+/* --- BOTONES 3D (Magic Design) --- */
+.btn-3d {
+    /* Apariencia Base */
+    background-color: var(--primary);
+    color: var(--text-light);
+    border: none;
+    font-family: var(--font-main);
+    font-weight: 600;
+    font-size: 1rem;
+    
+    /* Espaciado y Bordes */
+    padding: 14px 24px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    width: 100%; /* Ocupa todo el ancho disponible si está en bloque */
+    
+    /* Transiciones Suaves */
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    
+    /* --- EL EFECTO 3D --- */
+    /* Usamos las variables que definimos antes */
+    box-shadow: var(--btn-shadow); 
+    transform: translateY(0);
+}
+
+/* Estado Hover (Cuando pasas el mouse por encima) */
+.btn-3d:hover {
+    transform: var(--btn-transform-hover); /* Sube un poquito */
+    box-shadow: var(--btn-shadow-hover);   /* La sombra crece */
+    filter: brightness(1.1);               /* Se ilumina ligeramente */
+}
+
+/* Estado Active (Cuando haces clic) */
+.btn-3d:active {
+    transform: var(--btn-transform-active); /* Se hunde */
+    box-shadow: var(--btn-shadow-active);   /* La sombra desaparece */
+    outline: none;
+}
+
+/* --- Loader (Para cuando carga) --- */
+.loader {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- ESTILOS DE VENTANA MODAL --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+    z-index: 1000; /* Por encima de todo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Estado inicial: Oculto */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Estado visible (se activa con JS) */
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    /* --- CORRECCIÓN CLAVE PARA MÓVIL --- */
+    max-height: 90vh; /* Que nunca pase del 90% de la altura de la pantalla */
+    display: flex;    /* Para organizar cabecera y cuerpo */
+    flex-direction: column;
+    /* ---------------------------------- */
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.modal-overlay.visible .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #F9FAFB;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.btn-close-modal {
+    background: none; border: none;
+    font-size: 1.5rem; color: var(--text-muted);
+    cursor: pointer; line-height: 1;
+}
+.btn-close-modal:hover { color: var(--text-main); }
+
+.modal-body {
+    padding: 20px;
+    /* --- CORRECCIÓN CLAVE PARA SCROLL --- */
+    overflow-y: auto; /* Habilita el scroll si el contenido es largo */
+    /* ----------------------------------- */
+}
+
+/* --- Action Icon Buttons (touch-friendly) --- */
+.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-body);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-action-icon:hover {
+    transform: scale(1.1);
+}
+
+.btn-action-icon.view { color: var(--primary); }
+.btn-action-icon.view:hover { background: #EFF6FF; border-color: #BFDBFE; }
+
+.btn-action-icon.edit { color: #F59E0B; }
+.btn-action-icon.edit:hover { background: #FEF3C7; border-color: #FDE68A; }
+
+.btn-action-icon.delete { color: #EF4444; }
+.btn-action-icon.delete:hover { background: #FEE2E2; border-color: #FECACA; }
+
+.actions-cell {
+    display: flex;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .btn-action-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+    .actions-cell {
+        gap: 10px;
+    }
+}

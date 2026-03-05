@@ -1,0 +1,133 @@
+/* --- Estilos del Login --- */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--bg-body);
+    /* Fondo sutilmente decorado si se desea luego */
+}
+
+.login-card {
+    background: var(--bg-card);
+    width: 100%;
+    max-width: 420px;
+    padding: 40px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.login-logo {
+    height: 60px; /* Ajusta según el logo */
+    margin-bottom: 20px;
+    width: auto;
+}
+
+.login-title {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.login-subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+}
+
+/* Formulario */
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    background-color: #FAFAFA;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.btn-block {
+    width: 100%; /* Botón ancho completo */
+    display: block;
+}
+
+.login-footer {
+    margin-top: 30px;
+    font-size: 0.75rem;
+    color: #9CA3AF;
+    line-height: 1.4;
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- OPTIMIZACIÓN MÓVIL (Responsive Pro) --- */
+@media (max-width: 480px) {
+    .login-container {
+        padding: 0;
+        background-color: var(--bg-card);
+        /* Importante: Permitir scroll si la pantalla es muy pequeña o sale el teclado */
+        height: 100vh;
+        overflow-y: auto; 
+    }
+
+    .login-card {
+        box-shadow: none;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        
+        /* CAMBIO: Usamos min-height en vez de height fijo */
+        min-height: 100vh; 
+        height: auto; 
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        
+        /* CAMBIO: Padding seguro para que el logo no toque el borde superior */
+        padding: 40px 20px; 
+    }
+
+    .login-logo {
+        height: 80px;
+        /* Asegurar que no se deforme */
+        object-fit: contain; 
+    }
+
+    .login-title {
+        font-size: 1.75rem;
+    }
+    
+    .form-actions {
+        margin-top: 20px;
+        /* Espacio extra abajo por si hay barra de navegación del celular */
+        margin-bottom: 20px; 
+    }
+}
