@@ -60,11 +60,21 @@
     <!-- SPA Path Restoration (recibe ruta desde 404.html) -->
     <script>
         (function () {
+            // Guardar la base path REAL antes de cualquier modificación
+            // Ejemplo: /magic-crm-ultra/ o /Magic-CRM-Pro-Ver-01-main/
+            var pathname = window.location.pathname;
+            // Remover index.html si está presente
+            pathname = pathname.replace(/index\.html$/, '');
+            // Asegurar que termina con /
+            if (!pathname.endsWith('/')) pathname += '/';
+            window.__SPA_BASE = pathname;
+
             var params = new URLSearchParams(window.location.search);
             var p = params.get('p');
             if (p) {
-                // Restaurar la URL limpia original
-                var restored = p + (params.get('q') ? '?' + decodeURIComponent(params.get('q')) : '') + window.location.hash;
+                // Restaurar la URL limpia original CON el base path
+                var base = window.__SPA_BASE.replace(/\/$/, '');
+                var restored = base + p + (params.get('q') ? '?' + decodeURIComponent(params.get('q')) : '') + window.location.hash;
                 window.history.replaceState(null, '', restored);
             }
         })();
