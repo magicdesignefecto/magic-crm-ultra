@@ -1,4 +1,4 @@
-﻿import { Table } from '../components/Table.js';
+import { Table } from '../components/Table.js';
 import { Modal } from '../components/Modal.js';
 import { QuotesService } from '../services/quotes.service.js';
 import { LeadsService } from '../services/leads.service.js';
@@ -755,7 +755,7 @@ export const QuotesModule = {
     <div class="page">
         <div class="report-header">
             <div class="header-left">
-                <div class="header-logo"><img src="logo.png" alt="Logo"></div>
+                <div class="header-logo"><img src="https://raw.githubusercontent.com/magicdesignefecto/Magic-Design-Efecto-Servicios-Gestion-de-Redes-Sociales/77cbcdf9e5992cc519ac102d1182d9397f23f12a/logo%20svg%20magic%20design%20efecto.svg" alt="Logo"></div>
                 <div>
                     <div class="header-brand">Magic Design Efecto</div>
                     <div class="header-sub">Estudio de Estrategia Digital</div>
