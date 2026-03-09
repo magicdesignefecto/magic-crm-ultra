@@ -521,6 +521,25 @@ export const DashboardModule = {
                     flex-shrink: 0;
                 }
 
+                .btn-partial-action {
+                    padding: 5px 10px;
+                    border-radius: 8px;
+                    border: 1px solid #F59E0B;
+                    background: #FEF3C7;
+                    color: #92400E;
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+
+                .btn-partial-action:hover {
+                    background: #F59E0B;
+                    color: white;
+                }
+
                 .btn-complete-action {
                     background: #DBEAFE;
                     color: #2563EB;
@@ -710,6 +729,17 @@ export const DashboardModule = {
                     background: #1E293B !important;
                     color: #F87171 !important;
                     border-color: #7F1D1D !important;
+                }
+
+                .theme-dark .btn-partial-action {
+                    background: #1E293B !important;
+                    color: #FBBF24 !important;
+                    border-color: #92400E !important;
+                }
+
+                .theme-dark .btn-partial-action:hover {
+                    background: #92400E !important;
+                    color: #FEF3C7 !important;
                 }
 
                 .theme-dark .action-date-badge.upcoming {
@@ -1158,11 +1188,14 @@ export const DashboardModule = {
                 }
             } else {
                 if (isBilling) {
-                    // Billing pendiente: botón con monto
+                    // Billing pendiente: botón abono (amarillo) + completar (azul)
                     actionBtns = `
-                        <button class="btn-complete-action" data-lead="${action.leadId}" data-idx="${action.actionIndex}" data-date="${action.date}" data-recurring="true" style="font-size:0.72rem;padding:6px 12px;border:1px solid #93C5FD;background:#EFF6FF;color:#1E40AF;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">
-                            ${amountShort ? '💰 ' + amountShort : '💰 Cobrar'}
-                        </button>`;
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button class="btn-partial-action" data-action-idx="${filteredIdx}" title="Generar recibo de abono parcial">📝 Abono</button>
+                            <button class="btn-complete-action" data-lead="${action.leadId}" data-idx="${action.actionIndex}" data-date="${action.date}" data-recurring="true" style="font-size:0.72rem;padding:6px 12px;border:1px solid #93C5FD;background:#EFF6FF;color:#1E40AF;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">
+                                ${amountShort ? '💰 ' + amountShort : '💰 Cobrar'}
+                            </button>
+                        </div>`;
                 } else {
                     // Acción normal pendiente: completar
                     actionBtns = `
@@ -1242,7 +1275,7 @@ export const DashboardModule = {
             });
         });
 
-        // Bind receipt buttons (👁️)
+        // Bind receipt buttons (👁️) — recibo completo
         DashboardModule._filteredActions = filtered;
         container.querySelectorAll('.btn-receipt-action').forEach(btn => {
             btn.addEventListener('click', async (e) => {
@@ -1252,16 +1285,53 @@ export const DashboardModule = {
                 await DashboardModule.generateReceipt(action);
             });
         });
+
+        // Bind partial payment buttons (📝 Abono)
+        container.querySelectorAll('.btn-partial-action').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const actionIdx = parseInt(e.currentTarget.dataset.actionIdx);
+                const action = DashboardModule._filteredActions[actionIdx];
+                if (!action) return;
+
+                const currSymbol = action.leadCurrency === 'USD' ? '$us.' : 'Bs.';
+                const totalAmount = Number(action.leadTotal || 0);
+
+                const { value: partialAmount } = await Swal.fire({
+                    title: '📝 Recibo de Abono',
+                    html: `<p style="font-size:0.9rem; color:#475569; margin-bottom:12px;">Cliente: <strong>${action.leadName}</strong></p>
+                           <p style="font-size:0.85rem; color:#64748B; margin-bottom:16px;">Total del servicio: <strong>${currSymbol} ${totalAmount.toLocaleString('es-BO', { minimumFractionDigits: 2 })}</strong></p>
+                           <p style="font-size:0.85rem; color:#92400E; font-weight:600;">Ingrese el monto del abono:</p>`,
+                    input: 'number',
+                    inputPlaceholder: 'Monto del abono...',
+                    inputAttributes: { min: '0.01', step: '0.01' },
+                    showCancelButton: true,
+                    confirmButtonText: '📄 Generar Recibo',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#F59E0B',
+                    inputValidator: (value) => {
+                        if (!value || Number(value) <= 0) return 'Ingresa un monto válido';
+                    }
+                });
+
+                if (partialAmount) {
+                    await DashboardModule.generateReceipt(action, { isPartial: true, customAmount: Number(partialAmount) });
+                }
+            });
+        });
     },
 
     // Generador de Recibo PDF (HTML2PDF profesional)
-    generateReceipt: async (action) => {
+    // options: { isPartial: false, customAmount: null }
+    generateReceipt: async (action, options = {}) => {
+        const { isPartial = false, customAmount = null } = options;
         const now = new Date();
-        const receiptNum = `REC-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+        const prefix = isPartial ? 'ABN' : 'REC';
+        const receiptNum = `${prefix}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
 
         // Datos del recibo
         const currSymbol = action.leadCurrency === 'USD' ? '$us.' : 'Bs.';
-        const rawAmount = Number(action.leadTotal || 0);
+        const rawAmount = isPartial && customAmount ? customAmount : Number(action.leadTotal || 0);
+        const totalServicio = Number(action.leadTotal || 0);
         const amount = rawAmount.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         // Período: mes anterior → fecha cobro
@@ -1621,10 +1691,10 @@ export const DashboardModule = {
         </div>
 
         <!-- TÍTULO -->
-        <div class="receipt-title-bar">
+        <div class="receipt-title-bar"${isPartial ? ' style="border-bottom-color:#F59E0B;"' : ''}>
             <div class="receipt-title">
                 Documento
-                <span>RECIBO DE PAGO</span>
+                <span${isPartial ? ' style="color:#92400E;"' : ''}>RECIBO DE ${isPartial ? 'ABONO' : 'PAGO'}</span>
             </div>
             <div class="receipt-number">
                 <strong>Nº ${receiptNum}</strong>
@@ -1655,10 +1725,11 @@ export const DashboardModule = {
             </div>
 
             <!-- MONTO -->
-            <div class="amount-section">
-                <div class="section-label" style="text-align:center; margin-bottom:10px;">Monto Pagado</div>
-                <div class="amount-value">${currSymbol} ${amount}</div>
+            <div class="amount-section"${isPartial ? ' style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7); border-color:#FDE68A;"' : ''}>
+                <div class="section-label" style="text-align:center; margin-bottom:10px;">${isPartial ? 'Monto del Abono' : 'Monto Pagado'}</div>
+                <div class="amount-value"${isPartial ? ' style="color:#D97706;"' : ''}>${currSymbol} ${amount}</div>
                 <div class="amount-words">${amountWords}</div>
+                ${isPartial ? `<div style="margin-top:12px; padding-top:10px; border-top:1px solid #FDE68A; font-size:0.82rem; color:#92400E; font-weight:600;">Total del servicio: ${currSymbol} ${totalServicio.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div style="font-size:0.78rem; color:#B45309; margin-top:4px; font-style:italic;">Abono parcial — Saldo pendiente: ${currSymbol} ${(totalServicio - rawAmount).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>` : ''}
             </div>
 
             <!-- FECHA DE PAGO -->
@@ -1688,7 +1759,7 @@ export const DashboardModule = {
         </div>
     </div>
 
-    <button class="btn-download" id="btnDownload">📥 Descargar Recibo PDF</button>
+    <button class="btn-download" id="btnDownload">📥 Descargar ${isPartial ? 'Abono' : 'Recibo'} PDF</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
     <script>
@@ -1705,17 +1776,17 @@ export const DashboardModule = {
 
                 html2pdf().set({
                     margin: 0,
-                    filename: 'Recibo_${action.leadName.replace(/[^a-zA-Z0-9 ]/g, '_').replace(/\s+/g, '_')}_${receiptNum}.pdf',
+                    filename: '${isPartial ? 'Abono' : 'Recibo'}_${action.leadName.replace(/[^a-zA-Z0-9 ]/g, '_').replace(/\s+/g, '_')}_${receiptNum}.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, width: 480, windowWidth: 480, x: 0 },
                     jsPDF: { unit: 'mm', format: [pdfWidth, pdfHeight], orientation: 'portrait' },
                     pagebreak: { mode: ['avoid-all'] }
                 }).from(el).save().then(() => {
                     btn.textContent = '✅ PDF descargado';
-                    setTimeout(() => { btn.textContent = '📥 Descargar Recibo PDF'; btn.disabled = false; }, 2500);
+                    setTimeout(() => { btn.textContent = '📥 Descargar ${isPartial ? 'Abono' : 'Recibo'} PDF'; btn.disabled = false; }, 2500);
                 }).catch(() => {
                     btn.textContent = '❌ Error, intenta de nuevo';
-                    setTimeout(() => { btn.textContent = '📥 Descargar Recibo PDF'; btn.disabled = false; }, 2000);
+                    setTimeout(() => { btn.textContent = '📥 Descargar ${isPartial ? 'Abono' : 'Recibo'} PDF'; btn.disabled = false; }, 2000);
                 });
             }, 500);
         }
