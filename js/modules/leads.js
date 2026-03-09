@@ -784,51 +784,24 @@ export const LeadsModule = {
                 ${billingHTML}
             </div>`;
 
-        // Botón para descargar como imagen
+        // Botón para descargar como PDF profesional
         const downloadBtn = document.createElement('button');
         downloadBtn.style.cssText = 'width:100%; margin-top:12px; padding:12px; background:linear-gradient(135deg,#0F172A,#2563EB); color:white; border:none; border-radius:8px; font-size:0.88rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;';
-        downloadBtn.innerHTML = '📥 Descargar Ficha (PNG)';
+        downloadBtn.innerHTML = '📥 Descargar Ficha (PDF)';
         container.appendChild(downloadBtn);
 
         downloadBtn.addEventListener('click', async () => {
-            downloadBtn.textContent = '⏳ Generando...';
+            downloadBtn.textContent = '⏳ Generando PDF...';
             downloadBtn.disabled = true;
             try {
-                if (!window.html2canvas) {
-                    await new Promise((resolve, reject) => {
-                        const s = document.createElement('script');
-                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                        s.onload = resolve; s.onerror = reject;
-                        document.head.appendChild(s);
-                    });
-                }
-                // Crear clon fuera de la vista con estilos fijos
-                const el = container.querySelector('div');
-                const clone = el.cloneNode(true);
-                const wrapper = document.createElement('div');
-                wrapper.style.cssText = 'position:fixed; top:0; left:-9999px; width:420px; padding:20px; background:#ffffff; box-sizing:border-box; font-family:inherit; z-index:-1;';
-                wrapper.appendChild(clone);
-                document.body.appendChild(wrapper);
-                // Esperar que renderice
-                await new Promise(r => setTimeout(r, 150));
-                const canvas = await html2canvas(wrapper, {
-                    scale: 2,
-                    backgroundColor: '#ffffff',
-                    useCORS: true,
-                    scrollY: 0,
-                    scrollX: 0
-                });
-                document.body.removeChild(wrapper);
-                const link = document.createElement('a');
-                link.download = 'Ficha_' + lead.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/ +/g, '_') + '.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                downloadBtn.innerHTML = '✅ Descargada';
+                const { DashboardModule: DM } = await import('./dashboard.js');
+                await DM.generateFichaPDF({ leadId: lead.id });
+                downloadBtn.innerHTML = '✅ PDF generado';
             } catch (e) {
                 console.error(e);
                 downloadBtn.innerHTML = '❌ Error';
             }
-            setTimeout(() => { downloadBtn.innerHTML = '📥 Descargar Ficha (PNG)'; downloadBtn.disabled = false; }, 2500);
+            setTimeout(() => { downloadBtn.innerHTML = '📥 Descargar Ficha (PDF)'; downloadBtn.disabled = false; }, 2500);
         });
 
         Modal.open('modalViewLead');
