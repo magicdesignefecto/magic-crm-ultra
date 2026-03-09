@@ -420,7 +420,26 @@ export const DashboardService = {
                 } else {
                     delete billing.completedInstances[instanceDate];
                 }
-                await updateDoc(leadRef, { billing: billing });
+
+                // Optimización: Auto-completar acciones no monetarias al cobrar
+                const updateData = { billing: billing };
+
+                if (completed && leadData.actions && Array.isArray(leadData.actions)) {
+                    const actions = JSON.parse(JSON.stringify(leadData.actions));
+                    let actionsModified = false;
+                    actions.forEach(act => {
+                        if (typeof act !== 'string' && !act.completed && !act.recurring) {
+                            act.completed = true;
+                            act.completedAt = new Date().toISOString().split('T')[0];
+                            actionsModified = true;
+                        }
+                    });
+                    if (actionsModified) {
+                        updateData.actions = actions;
+                    }
+                }
+
+                await updateDoc(leadRef, updateData);
             } else {
                 // ===== ACCIÓN NORMAL =====
                 const actions = JSON.parse(JSON.stringify(leadData.actions || []));
