@@ -1164,11 +1164,14 @@ export const DashboardModule = {
                             ${amountShort ? '💰 ' + amountShort : '💰 Cobrar'}
                         </button>`;
                 } else {
-                    // Acción normal pendiente: completar
+                    // Acción normal pendiente: ojo + completar
                     actionBtns = `
-                        <button class="btn-complete-action" data-lead="${action.leadId}" data-idx="${action.actionIndex}" data-date="${action.date}" data-recurring="${isRecurring}" style="font-size:0.72rem;padding:6px 12px;border:1px solid #93C5FD;background:#EFF6FF;color:#1E40AF;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">
-                            ✅ Completar
-                        </button>`;
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button class="btn-ficha-action" data-action-idx="${filteredIdx}" style="width:36px;height:36px;border:1px solid #D1D5DB;background:#EFF6FF;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ver Ficha PDF">👁️</button>
+                            <button class="btn-complete-action" data-lead="${action.leadId}" data-idx="${action.actionIndex}" data-date="${action.date}" data-recurring="${isRecurring}" style="font-size:0.72rem;padding:6px 12px;border:1px solid #93C5FD;background:#EFF6FF;color:#1E40AF;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:600;">
+                                ✅ Completar
+                            </button>
+                        </div>`;
                 }
             }
 
@@ -1198,6 +1201,16 @@ export const DashboardModule = {
                 try {
                     const result = await DashboardService.completeAction(leadId, idx, true, isRecurring ? dateStr : null);
                     if (result.ok) {
+                        // Si es billing, auto-completar acciones no monetarias del mismo lead
+                        if (idx === -1) {
+                            const allActions = DashboardModule._allActions;
+                            const relatedActions = allActions.filter(a => a.leadId === leadId && !a.isBilling && !a.completed && a.actionIndex >= 0);
+                            for (const ra of relatedActions) {
+                                try {
+                                    await DashboardService.completeAction(ra.leadId, ra.actionIndex, true, null);
+                                } catch (e) { console.error('Error auto-completando acción:', e); }
+                            }
+                        }
                         const data = await DashboardService.getData(true);
                         DashboardModule._allActions = data.upcomingActions || [];
                         DashboardModule.renderActions();
@@ -1242,7 +1255,7 @@ export const DashboardModule = {
             });
         });
 
-        // Bind receipt buttons (👁️)
+        // Bind receipt buttons (👁️) - billing completado
         DashboardModule._filteredActions = filtered;
         container.querySelectorAll('.btn-receipt-action').forEach(btn => {
             btn.addEventListener('click', async (e) => {
@@ -1250,6 +1263,16 @@ export const DashboardModule = {
                 const action = DashboardModule._filteredActions[actionIdx];
                 if (!action) return;
                 await DashboardModule.generateReceipt(action);
+            });
+        });
+
+        // Bind ficha buttons (👁️) - acciones no monetarias
+        container.querySelectorAll('.btn-ficha-action').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const actionIdx = parseInt(e.currentTarget.dataset.actionIdx);
+                const action = DashboardModule._filteredActions[actionIdx];
+                if (!action) return;
+                await DashboardModule.generateFichaPDF(action);
             });
         });
     },
@@ -1722,6 +1745,267 @@ export const DashboardModule = {
 
         document.getElementById('btnDownload').addEventListener('click', generatePDF);
     <\/script>
+</body>
+</html>`;
+
+        const w = window.open('', '_blank');
+        w.document.write(html);
+        w.document.close();
+    },
+
+    // Generador de Ficha PDF (para acciones no monetarias)
+    generateFichaPDF: async (action) => {
+        // Obtener datos completos del lead
+        let lead = null;
+        try {
+            const { LeadsService } = await import('../services/leads.service.js');
+            lead = await LeadsService.getById(action.leadId);
+        } catch (e) {
+            console.error('Error cargando lead:', e);
+        }
+        if (!lead) {
+            if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la información del lead' });
+            return;
+        }
+
+        const now = new Date();
+        const fichaNum = `FIC-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+
+        const fmtFull = (d) => {
+            const day = String(d.getDate()).padStart(2, '0');
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            return `${day} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+        };
+        const fechaHoy = fmtFull(now);
+        const horaHoy = now.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' });
+
+        const currSymbol = (c) => c === 'USD' ? '$us.' : c === 'EUR' ? '€' : 'Bs.';
+        const curr = currSymbol(lead.currency || 'BOB');
+
+        // Services badges
+        const servicesBadges = lead.services && lead.services.length > 0
+            ? lead.services.map(s => `<span style="background:#EFF6FF; color:#2563EB; padding:4px 10px; border-radius:20px; font-size:0.72rem; font-weight:600; border:1px solid #BFDBFE;">${s}</span>`).join(' ')
+            : '<span style="color:#94A3B8; font-size:0.8rem;">Sin servicios</span>';
+
+        // Actions list
+        const actionsHTML = lead.actions && lead.actions.length > 0
+            ? lead.actions.map((act, idx) => {
+                const txt = typeof act === 'string' ? act : act.text;
+                const d = typeof act === 'string' ? '' : (act.date || '');
+                const completed = typeof act === 'string' ? false : (act.completed || false);
+                let dateLabel = '';
+                if (d) {
+                    const dd = new Date(d + 'T00:00:00');
+                    dateLabel = dd.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                return `<div style="display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid #F1F5F9;">
+                    <span style="background:${completed ? '#10B981' : '#3B82F6'}; color:white; padding:2px 8px; border-radius:4px; font-size:0.68rem; font-weight:700;">${completed ? '✓' : String.fromCharCode(65 + idx) + ')'}</span>
+                    <span style="flex:1; font-size:0.82rem; color:#1E293B;${completed ? ' text-decoration:line-through; opacity:0.6;' : ''}">${txt}</span>
+                    ${dateLabel ? `<span style="font-size:0.72rem; color:#64748B;">${dateLabel}</span>` : ''}
+                </div>`;
+            }).join('') : '';
+
+        // Billing info
+        let billingHTML = '';
+        if (lead.billing && lead.billing.active) {
+            const b = lead.billing;
+            const freqLabels = { monthly: 'Mensual', yearly: 'Anual', custom: 'Personalizado' };
+            billingHTML = `
+                <div style="margin-top:4px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.82rem;">
+                        ${b.service ? `<div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Servicio</div><div style="font-weight:700; color:#0F172A;">${b.service}</div></div>` : ''}
+                        <div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Monto</div><div style="font-weight:800; color:#059669;">${currSymbol(b.currency || lead.currency)} ${Number(b.amount || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}</div></div>
+                        <div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Frecuencia</div><div style="font-weight:600;">${freqLabels[b.frequency] || b.frequency || '-'}</div></div>
+                        <div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">D\u00eda de cobro</div><div style="font-weight:600;">D\u00eda ${b.dayOfMonth || '-'}</div></div>
+                        ${b.advance > 0 ? `<div style="grid-column:span 2;"><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Adelanto</div><div style="font-weight:700; color:#D97706;">${currSymbol(b.currency || lead.currency)} ${Number(b.advance).toLocaleString('es-BO', { minimumFractionDigits: 2 })}${b.advanceConcept ? ' (' + b.advanceConcept + ')' : ''}</div></div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        const statusColors = { 'Nuevo': '#3B82F6', 'Contactado': '#F59E0B', 'Interesado': '#8B5CF6', 'Cerrado': '#10B981', 'Perdido': '#EF4444', 'Pausa': '#6B7280' };
+        const stColor = statusColors[lead.status] || '#3B82F6';
+
+        const logoUrl = 'https://raw.githubusercontent.com/magicdesignefecto/Magic-Design-Efecto-Servicios-Gestion-de-Redes-Sociales/77cbcdf9e5992cc519ac102d1182d9397f23f12a/logo%20svg%20magic%20design%20efecto.svg';
+
+        const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha - ${lead.name}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 480px; overflow-x: hidden; }
+        body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; color: #1E293B; background: white; }
+        .page { width: 100%; max-width: 480px; margin: 0 auto; background: white; overflow: hidden; }
+
+        .receipt-header {
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #2563EB 100%);
+            color: white;
+            padding: 28px 28px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .header-logo { width: 44px; height: 44px; background: white; border-radius: 10px; padding: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .header-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .header-brand { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; text-transform: uppercase; }
+        .header-sub { font-size: 0.72rem; font-weight: 400; color: rgba(255,255,255,0.65); margin-top: 3px; }
+        .header-slogan { font-size: 0.68rem; font-style: italic; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+        .title-bar { background: #F8FAFC; border-bottom: 2px solid #E2E8F0; padding: 18px 28px; display: flex; justify-content: space-between; align-items: center; }
+        .title-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 3px; color: #64748B; font-weight: 700; }
+        .title-label span { display: block; font-size: 1.3rem; letter-spacing: -0.5px; color: #0F172A; font-weight: 800; margin-top: 2px; }
+        .title-number { text-align: right; font-size: 0.72rem; color: #94A3B8; font-weight: 500; }
+        .title-number strong { display: block; font-size: 0.8rem; color: #475569; font-weight: 700; margin-bottom: 2px; }
+
+        .content { padding: 24px 28px 20px; }
+        .section-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; color: #94A3B8; font-weight: 700; margin-bottom: 8px; }
+        .section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #E2E8F0; }
+        .section:last-child { border-bottom: none; margin-bottom: 0; }
+
+        .receipt-footer {
+            margin-top: 24px; padding: 16px 28px 60px;
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A5F 100%);
+            text-align: center;
+        }
+        .footer-text { font-size: 0.68rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+        .footer-text strong { color: rgba(255,255,255,0.8); }
+
+        .btn-download {
+            display: block; width: calc(100% - 48px); margin: 20px auto; padding: 14px;
+            background: linear-gradient(135deg, #0F172A, #2563EB); color: white; border: none;
+            border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: center;
+        }
+        .btn-download:active { opacity: 0.8; }
+        .btn-download:disabled { opacity: 0.6; cursor: wait; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="receipt-header">
+            <div class="header-left">
+                <div class="header-logo"><img src="${logoUrl}" alt="Logo"></div>
+                <div>
+                    <div class="header-brand">Magic Design Efecto</div>
+                    <div class="header-sub">Estudio de Estrategia y Marketing Digital</div>
+                    <div class="header-slogan">Estrategias digitales que convierten</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="title-bar">
+            <div class="title-label">Documento<span>FICHA DE PROSPECTO</span></div>
+            <div class="title-number"><strong>N\u00ba ${fichaNum}</strong>${fechaHoy}</div>
+        </div>
+
+        <div class="content">
+            <!-- CLIENTE -->
+            <div class="section">
+                <div class="section-label">Cliente</div>
+                <div style="display:flex; gap:14px; align-items:center;">
+                    <div style="width:46px; height:46px; background:linear-gradient(135deg,#E0E7FF,#C7D2FE); color:#4338CA; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:800;">${lead.name.charAt(0)}</div>
+                    <div style="flex:1;">
+                        <div style="font-size:1.15rem; font-weight:800; color:#0F172A; letter-spacing:-0.3px;">${lead.name}</div>
+                        <div style="font-size:0.85rem; color:#475569;">${lead.company || 'Particular'}</div>
+                    </div>
+                    <span style="background:${stColor}20; color:${stColor}; padding:4px 12px; border-radius:20px; font-size:0.72rem; font-weight:700; border:1px solid ${stColor}40;">${lead.status}</span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; font-size:0.82rem;">
+                    ${lead.phone ? `<div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Tel\u00e9fono</div><div style="font-weight:600;">${lead.phone}</div></div>` : ''}
+                    ${lead.email ? `<div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Email</div><div style="font-weight:500; word-break:break-all;">${lead.email}</div></div>` : ''}
+                    ${lead.source ? `<div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Fuente</div><div style="font-weight:600;">${lead.source}</div></div>` : ''}
+                    ${lead.date ? `<div><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Registro</div><div style="font-weight:600;">${lead.date}</div></div>` : ''}
+                    ${lead.address ? `<div style="grid-column:span 2;"><div style="color:#94A3B8; font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Direcci\u00f3n</div><div style="font-weight:500;">${lead.address}</div></div>` : ''}
+                </div>
+            </div>
+
+            <!-- SERVICIOS -->
+            <div class="section">
+                <div class="section-label">Servicios de Inter\u00e9s</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">${servicesBadges}</div>
+            </div>
+
+            ${actionsHTML ? `
+            <!-- ACCIONES -->
+            <div class="section">
+                <div class="section-label">Acciones a Seguir</div>
+                ${actionsHTML}
+            </div>` : ''}
+
+            <!-- FINANCIERO -->
+            <div class="section" style="border-bottom:none;">
+                <div class="section-label">Resumen Financiero</div>
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.88rem;">
+                        <span>Inversi\u00f3n:</span><span style="font-weight:600;">${curr} ${Number(lead.investment || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    ${lead.billing && lead.billing.advance > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.88rem; color:#D97706;">
+                        <span>Adelanto${lead.billing.advanceConcept ? ' (' + lead.billing.advanceConcept + ')' : ''}:</span><span style="font-weight:600;">- ${curr} ${Number(lead.billing.advance).toLocaleString('es-BO', { minimumFractionDigits: 2 })}</span>
+                    </div>` : ''}
+                    ${lead.discount > 0 ? `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.88rem; color:#EF4444;">
+                        <span>Descuento:</span><span style="font-weight:600;">- ${curr} ${Number(lead.discount).toLocaleString('es-BO', { minimumFractionDigits: 2 })}</span>
+                    </div>` : ''}
+                    <div style="border-top:1px dashed #CBD5E1; padding-top:10px; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; font-size:0.95rem;">TOTAL</span>
+                        <span style="font-size:1.4rem; font-weight:800; color:#059669;">${curr} ${Number(lead.total || 0).toLocaleString('es-BO', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${billingHTML ? `
+            <!-- COBRO REGULAR -->
+            <div class="section" style="border-bottom:none; margin-top:-8px;">
+                <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:16px;">
+                    <div class="section-label" style="color:#166534;">Cobro Regular</div>
+                    ${billingHTML}
+                </div>
+            </div>` : ''}
+        </div>
+
+        <div class="receipt-footer">
+            <div class="footer-text">
+                <strong>Magic Design Efecto</strong> \u00b7 Estudio de Estrategia y Marketing Digital<br>
+                magicdesignefecto.com \u00b7 +591 63212806 \u00b7 La Paz, Bolivia<br>
+                Generado autom\u00e1ticamente el ${fechaHoy} a las ${horaHoy}
+            </div>
+        </div>
+    </div>
+
+    <button class="btn-download" id="btnDownload">\ud83d\udce5 Descargar Ficha PDF</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\\/script>
+    <script>
+        function generatePDF() {
+            const btn = document.getElementById('btnDownload');
+            const el = document.querySelector('.page');
+            btn.textContent = '\u23f3 Generando PDF...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const pxToMm = 0.2646;
+                const pdfWidth = 480 * pxToMm;
+                const pdfHeight = (el.scrollHeight + 40) * pxToMm;
+
+                html2pdf().set({
+                    margin: 0,
+                    filename: 'Ficha_${lead.name.replace(/[^a-zA-Z0-9 ]/g, '_').replace(/\s+/g, '_')}_${fichaNum}.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, width: 480, windowWidth: 480, x: 0 },
+                    jsPDF: { unit: 'mm', format: [pdfWidth, pdfHeight], orientation: 'portrait' },
+                    pagebreak: { mode: ['avoid-all'] }
+                }).from(el).save().then(() => {
+                    btn.textContent = '\u2705 PDF descargado';
+                    setTimeout(() => { btn.textContent = '\ud83d\udce5 Descargar Ficha PDF'; btn.disabled = false; }, 2500);
+                }).catch(() => {
+                    btn.textContent = '\u274c Error, intenta de nuevo';
+                    setTimeout(() => { btn.textContent = '\ud83d\udce5 Descargar Ficha PDF'; btn.disabled = false; }, 2000);
+                });
+            }, 500);
+        }
+
+        document.getElementById('btnDownload').addEventListener('click', generatePDF);
+    <\\/script>
 </body>
 </html>`;
 
